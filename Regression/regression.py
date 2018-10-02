@@ -1,7 +1,7 @@
 #regression stock prices
 import config
 import pandas as pd
-import quandl, math
+import quandl, math, datetime
 import numpy as np
 from sklearn import preprocessing, model_selection, svm #support vector machine
 from sklearn.linear_model import LinearRegression
@@ -23,15 +23,20 @@ forecast_out = int(math.ceil(0.01*len(df)))
 print(forecast_out)
 
 df['label'] = df[forecast_col].shift(-forecast_out)
-df.dropna(inplace=True)
 
 x = np.array(df.drop(['label'],1))
-y = np.array(df['label'])
-
 x = preprocessing.scale(x)
+x_lately = x[-forecast_out:]
+x = x[:-forecast_out]
 
-#x = x[:-forecast_out+1]
+df.dropna(inplace=True)
+
 y = np.array(df['label'])
+y = y[:-forecast_out]
+y = np.array(df['label'])
+
+
+
 
 x_train, x_test, y_train, y_test = model_selection.train_test_split(x, y, test_size=0.2)
 
@@ -39,4 +44,6 @@ clf = LinearRegression(n_jobs=-1) #classifier
 clf.fit(x_train, y_train)
 accuracy = clf.score(x_test, y_test)  
 
-print(accuracy)
+forecast_set = clf.predict(x_lately)
+
+print(forecast_set, accuracy, forecast_out)
