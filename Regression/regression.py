@@ -5,6 +5,10 @@ import quandl, math, datetime
 import numpy as np
 from sklearn import preprocessing, model_selection, svm #support vector machine
 from sklearn.linear_model import LinearRegression
+import matplotlib.pyplot as plt 
+from matplotlib import style
+
+style.use('ggplot')
 
 quandl.ApiConfig.api_key = config.api_key
 df = quandl.get('WIKI/GOOGL')
@@ -35,9 +39,6 @@ y = np.array(df['label'])
 y = y[:-forecast_out]
 y = np.array(df['label'])
 
-
-
-
 x_train, x_test, y_train, y_test = model_selection.train_test_split(x, y, test_size=0.2)
 
 clf = LinearRegression(n_jobs=-1) #classifier
@@ -47,3 +48,22 @@ accuracy = clf.score(x_test, y_test)
 forecast_set = clf.predict(x_lately)
 
 print(forecast_set, accuracy, forecast_out)
+
+df['Forecast'] = np.nan
+
+last_date = df.iloc[-1].name
+last_unix = last_date.timestamp()
+one_day = 86400
+next_unix = last_unix + one_day
+
+for i in forecast_set:
+	next_date = datetime.datetime.fromtimestamp(next_unix)
+	next_unix += one_day
+	df.loc[next_date] = [np.nan for _ in range (len(df.columns)-1)] + [i]
+	#df.loc[next_date] is saying that next_date is a date stamp, the index
+df['Adj. Close'].plot()
+df['Forecast'].plot()
+plt.legend(loc=4)
+plt.xlabel('Date')
+plt.ylabel('Price')
+plt.show()
